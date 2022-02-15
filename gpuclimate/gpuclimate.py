@@ -23,7 +23,6 @@ import matplotlib.pyplot as plt        # to plot any graph
 import matplotlib.patches as mpatches  # to draw a circle at the mean contour
 import scipy.ndimage as ndi            # to determine shape centrality
 # matplotlib setup
-%matplotlib inline
 from pylab import rcParams
 rcParams['figure.figsize'] = (8, 8)      # setting default size of plots
 
