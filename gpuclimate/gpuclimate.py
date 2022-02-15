@@ -2,6 +2,9 @@
 
 import PIL
 from PIL import Image as PILImage
+from collections import Counter
+from string import punctuation
+
 # import rasterio as rio
 # import numpy
 # import pycuda.driver as drv
@@ -33,15 +36,8 @@ from PIL import Image as PILImage
 #     print ("Device #%d: %s" % (ordinal, dev.name()))
 # print (cuda)
 
-
 def hello_world():
     print("Hello World!")
-
-
-
-from collections import Counter
-from string import punctuation
-
 
 def load_text(input_file):
     """Load text from a text file and return as a string."""
@@ -62,8 +58,6 @@ def count_words(input_file):
     text = clean_text(text)
     words = text.split()
     return Counter(words)
-
-
 
 
 

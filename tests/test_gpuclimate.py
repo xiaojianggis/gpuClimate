@@ -24,3 +24,6 @@ def test_content(response):
 
 def test_hello_world():
     gpuclimate.hello_world()
+
+def test_count_words():
+    gpuclimate.count_words()
