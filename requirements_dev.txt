@@ -12,7 +12,6 @@ flake8
 coverage
 flake8-html
 
-
 sphinx>=2 # jupyter_sphinx requires sphinx>=2
 nbsphinx
 sphinx-rtd-theme==0.5.0rc2
@@ -20,5 +19,6 @@ sphinxcontrib-blockdiag
 jupyter_sphinx>=0.3.2
 sphinx-jsonschema>=1.15
 pygments==2.6.1
-
+rasterio==1.3a3
+fiona==1.8.21
 
