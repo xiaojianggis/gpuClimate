@@ -2,36 +2,36 @@
 
 import PIL
 from PIL import Image as PILImage
-import rasterio as rio
-import numpy
-import pycuda.driver as drv
+# import rasterio as rio
+# import numpy
+# import pycuda.driver as drv
 
-from pycuda.compiler import SourceModule
-import pycuda
-from pycuda import gpuarray
-from pycuda import compiler
-import pycuda.driver as cuda
-import pycuda.autoinit             # PyCuda autoinit
-import pycuda.driver as cuda       # PyCuda In, Out helpers
-import matplotlib.pyplot as plot   # Library to plot
-import matplotlib.cm as colormap   # Library to plot
-import numpy                       # Fast math library
-import time
-import numpy as np                     # numeric python lib
-import matplotlib.image as mpimg       # reading images to numpy arrays
-import matplotlib.pyplot as plt        # to plot any graph
-import matplotlib.patches as mpatches  # to draw a circle at the mean contour
-import scipy.ndimage as ndi            # to determine shape centrality
-# matplotlib setup
-from pylab import rcParams
-rcParams['figure.figsize'] = (8, 8)      # setting default size of plots
+# from pycuda.compiler import SourceModule
+# import pycuda
+# from pycuda import gpuarray
+# from pycuda import compiler
+# import pycuda.driver as cuda
+# import pycuda.autoinit             # PyCuda autoinit
+# import pycuda.driver as cuda       # PyCuda In, Out helpers
+# import matplotlib.pyplot as plot   # Library to plot
+# import matplotlib.cm as colormap   # Library to plot
+# import numpy                       # Fast math library
+# import time
+# import numpy as np                     # numeric python lib
+# import matplotlib.image as mpimg       # reading images to numpy arrays
+# import matplotlib.pyplot as plt        # to plot any graph
+# import matplotlib.patches as mpatches  # to draw a circle at the mean contour
+# import scipy.ndimage as ndi            # to determine shape centrality
+# # matplotlib setup
+# from pylab import rcParams
+# rcParams['figure.figsize'] = (8, 8)      # setting default size of plots
 
 
-print("%d device(s) found." % cuda.Device.count())           
-for ordinal in range(cuda.Device.count()):
-    dev = cuda.Device(ordinal)
-    print ("Device #%d: %s" % (ordinal, dev.name()))
-print (cuda)
+# print("%d device(s) found." % cuda.Device.count())           
+# for ordinal in range(cuda.Device.count()):
+#     dev = cuda.Device(ordinal)
+#     print ("Device #%d: %s" % (ordinal, dev.name()))
+# print (cuda)
 
 
 def hello_world():
@@ -153,65 +153,65 @@ __global__ void svfcalculator(float * lattice_out, float * lattice, float scale)
 """
 
 
-#Compile and get kernel function
-mod = SourceModule(kernel)
-print (mod)
+# #Compile and get kernel function
+# mod = SourceModule(kernel)
+# print (mod)
 
 
 
-def svfCalculator_RayTracingOnGPU(dsm, scale):
-    '''This code is used to calculate the sky view factor using the ray-tracing
-    algorithm based on the GPU acceleration
-    last modified Jan 27, 2021
-    by Xiaojiang Li, Temple University
+# def svfCalculator_RayTracingOnGPU(dsm, scale):
+#     '''This code is used to calculate the sky view factor using the ray-tracing
+#     algorithm based on the GPU acceleration
+#     last modified Jan 27, 2021
+#     by Xiaojiang Li, Temple University
     
-    Parameters:
-        dsm: the numpy array of the digital surface model
-        scale: is the scale of the image, read from the gdal,
-                1px of 2 feet, scale is 0.5; 1px of 3 feet, scale is 0.3333
-    '''
+#     Parameters:
+#         dsm: the numpy array of the digital surface model
+#         scale: is the scale of the image, read from the gdal,
+#                 1px of 2 feet, scale is 0.5; 1px of 3 feet, scale is 0.3333
+#     '''
     
-    px = numpy.array(dsm).astype(numpy.float32)
+#     px = numpy.array(dsm).astype(numpy.float32)
     
-    #print ('Size:' + str(dsm.shape))
-    #print ('Pixels:' + str (dsm.shape[0]*dsm.shape[1]))
-    #print('The px.nbtyle is:', px.nbytes, px.shape)
+#     #print ('Size:' + str(dsm.shape))
+#     #print ('Pixels:' + str (dsm.shape[0]*dsm.shape[1]))
+#     #print('The px.nbtyle is:', px.nbytes, px.shape)
     
     
-    # allocate memory on the device and transfer data to GPU 
-    d_px = cuda.mem_alloc(px.nbytes)
-    cuda.memcpy_htod(d_px, px)
+#     # allocate memory on the device and transfer data to GPU 
+#     d_px = cuda.mem_alloc(px.nbytes)
+#     cuda.memcpy_htod(d_px, px)
     
-    height,width = px.shape
-    nb_pixels = height * width
+#     height,width = px.shape
+#     nb_pixels = height * width
     
-    # Set blocks et Grid sizes
-    nb_ThreadsX = 8
-    nb_ThreadsY = 8
-    nb_blocksX = (width // nb_ThreadsX) + 1
-    nb_blocksY = (height // nb_ThreadsY) + 1
+#     # Set blocks et Grid sizes
+#     nb_ThreadsX = 8
+#     nb_ThreadsY = 8
+#     nb_blocksX = (width // nb_ThreadsX) + 1
+#     nb_blocksY = (height // nb_ThreadsY) + 1
 
-    #print("Test GPU ",nb_blocksX*nb_blocksY," Blocks ",nb_ThreadsX*nb_ThreadsY," Threads/Block")
-    tps1 = time.time()
+#     #print("Test GPU ",nb_blocksX*nb_blocksY," Blocks ",nb_ThreadsX*nb_ThreadsY," Threads/Block")
+#     tps1 = time.time()
     
     
-    # create empty array
-    lattice_gpu = gpuarray.to_gpu(px)
-    newLattice_gpu = gpuarray.empty_like(lattice_gpu)
+#     # create empty array
+#     lattice_gpu = gpuarray.to_gpu(px)
+#     newLattice_gpu = gpuarray.empty_like(lattice_gpu)
     
-    # the GPU function
-    KNN_Mono_GPU = mod.get_function("svfcalculator")
-    KNN_Mono_GPU(newLattice_gpu, d_px, np.float32(scale), \
-               block=(nb_ThreadsX,nb_ThreadsY,1), \
-               grid=(nb_blocksX,nb_blocksY))  
+#     # the GPU function
+#     KNN_Mono_GPU = mod.get_function("svfcalculator")
+#     KNN_Mono_GPU(newLattice_gpu, d_px, np.float32(scale), \
+#                block=(nb_ThreadsX,nb_ThreadsY,1), \
+#                grid=(nb_blocksX,nb_blocksY))  
     
-    bwPx = numpy.empty_like(px)    
-    bwPx = newLattice_gpu.get()
+#     bwPx = numpy.empty_like(px)    
+#     bwPx = newLattice_gpu.get()
     
-    bwPx = numpy.float32(bwPx)
-    #pil_im = PILImage.fromarray(bwPx)
+#     bwPx = numpy.float32(bwPx)
+#     #pil_im = PILImage.fromarray(bwPx)
     
-    return bwPx
+#     return bwPx
 
 
 
