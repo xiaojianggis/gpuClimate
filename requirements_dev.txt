@@ -21,4 +21,8 @@ sphinx-jsonschema>=1.15
 pygments==2.6.1
 rasterio==1.3a3
 fiona==1.8.21
+progressbar2==4.0.0
+rtree==0.9.7
+shapely==1.6.4.post1
+pyproj==1.9.6
 

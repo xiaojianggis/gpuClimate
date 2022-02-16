@@ -1,13 +1,9 @@
-### This module is used to download the NAIP images
-# Standard packages
-import tempfile
-import warnings
-import urllib
-import shutil
-import os
+## This script is used to download the NAIP images, the original NAIP 
+## is organized and saved on Microsoft Azure, this script will access 
+## the NAIP images there 
+## Reference: https://azure.microsoft.com/en-us/services/open-datasets/catalog/naip/?tab=data-access
+## First created Oct 4, 2020 by Xiaojiang Li, Temple University
 
-# Workaround for a problem in older rasterio versions
-os.environ["CURL_CA_BUNDLE"] = "/etc/ssl/certs/ca-certificates.crt" 
 
 # Less standard, but still pip- or conda-installable
 import matplotlib.pyplot as plt
@@ -16,13 +12,25 @@ import rasterio
 import rtree
 import shapely
 import pickle
-
+import os, os.path
 # pip install progressbar2, not progressbar
 import progressbar
-
+# Standard packages
+import tempfile
+import warnings
+import urllib
+import shutil
+import os
+import fiona
+# Workaround for a problem in older rasterio versions
+# os.environ["CURL_CA_BUNDLE"] = "/etc/ssl/certs/ca-certificates.crt" 
+os.environ["CURL_CA_BUNDLE"] = '/Users/senseablecity/anaconda3/envs/geospatial/lib/python3.9/site-packages/certifi/cacert.pem'
 # from geopy.geocoders import Nominatim
 from rasterio.windows import Window 
 from tqdm import tqdm
+
+latest_wkid = 3857
+crs = "EPSG:4326"
 
 
 # Storage locations are documented at http://aka.ms/ai4edata-naip
@@ -200,8 +208,7 @@ def download_url(url, destination_filename=None, progress_updater=None, force_do
     """
     Download a URL to a temporary file
     """
-    import urllib.request
-
+    
     # This is not intended to guarantee uniqueness, we just know it happens to guarantee
     # uniqueness for this application.
     if destination_filename is None:
@@ -267,14 +274,7 @@ def get_coordinates_from_address(address):
     return location.latitude, location.longitude
 
 
-### The main function to download the NAIP imageries
-def naip_downloader(base, epsg, year):
-    '''
-    download the NAIP tiles
-    Parameters: 
-        shapefile: the city limit shapefile
-
-    '''
+if __name__ == '__main__':
     import rasterio
     import os, os.path
     # import gdal
@@ -285,81 +285,127 @@ def naip_downloader(base, epsg, year):
     from shapely.geometry import shape, Point, Polygon, mapping
     from functools import partial
     from shapely.ops import transform
+    import argparse
     
-    index = NAIPTileIndex()
+    parser = argparse.ArgumentParser(
+        description="Mosaic rasters"
+    )
 
+    parser.add_argument(
+        "--root",
+        required=True,
+        type=str,
+        help="the input folder root"
+    )
+
+    parser.add_argument(
+        "--epsg",
+        default='',
+        metavar=2000,
+        help="the epsg code of the study area",
+        type=str,
+    )
+
+    parser.add_argument(
+        "--year",
+        default='',
+        metavar=2000,
+        help="the year of the NAIP image in the study area",
+        type=str,
+    )
+    
+    args = parser.parse_args()
+    base = args.root
+    epsg = args.epsg
+    year = args.year
+    # outfile = args.outfile
+    
+    # base = r'/mnt/thermalenv/thermal-env/data/houston/spatial-data'
+    # base = r'/mnt/thermalenv/thermal-env/data/sandiego/spatial-data'
+
+    index = NAIPTileIndex()
+    
     # shapefile = r'/mnt/thermalenv/thermal-env/data/houston/spatial-data/city_limit.shp'
     # shapefile = r'/mnt/thermalenv/thermal-env/data/sandiego/spatial-data/city_limit.shp'
     shapefile = os.path.join(base, 'city_limit.shp')
 
     layer = fiona.open(shapefile)
-    for feat in layer:
-        geom = shape(feat['geometry'])
+    # for feat in layer:
+    #     geom = shape(feat['geometry'])
 
-    print('The layer crs is-------------:', layer.crs)
+    # print('The crs of the layer is:', layer.crs)
 
-    # convert the geom from local projection to wgs84
-    epsgcode = 'epsg:%s'%(epsg)
-    project = partial(
-        pyproj.transform,
-        pyproj.Proj(init=epsgcode), # source coordinate system #2279: houston, 6426 for sandiego
-        # pyproj.Proj(init='epsg:6426'), # source coordinate system #2279: houston, 6426 for sandiego
-        pyproj.Proj(init='epsg:4326')) # destination coordinate system
 
-    g2 = transform(project, geom)  # apply projection
-
-    # using the reprojected geom shape to find the corresponding tile
-    naip_files = index.lookup_tile_shape(g2)
-
-    nc_naips = os.path.join(base, 'nc-naip')
-    cir_naips = os.path.join(base, 'cir-naip')
-
-    if not os.path.exists(nc_naips): os.mkdir(nc_naips)
-    if not os.path.exists(cir_naips): os.mkdir(cir_naips)
-
-    yearlist = []
-    yearlist.append(year)
+    # # convert the geom from local projection to wgs84
+    # epsgcode = 'epsg:%s'%(epsg)
+    # project = partial(
+    #     pyproj.transform,
+    #     pyproj.Proj(init=epsgcode), # source coordinate system #2279: houston, 6426 for sandiego
+    #     # pyproj.Proj(init='epsg:6426'), # source coordinate system #2279: houston, 6426 for sandiego
+    #     pyproj.Proj(init='epsg:4326')) # destination coordinate system
     
-    print('\nList of available naip files for this location:\n')
-    for file in naip_files:
-        print(file)
+    # g2 = transform(project, geom)  # apply projection
+
+    # # using the reprojected geom shape to find the corresponding tile
+    # naip_files = index.lookup_tile_shape(g2)
+
+    # nc_naips = os.path.join(base, 'nc-naip')
+    # cir_naips = os.path.join(base, 'cir-naip')
+
+    # if not os.path.exists(nc_naips): os.mkdir(nc_naips)
+    # if not os.path.exists(cir_naips): os.mkdir(cir_naips)
+
+    # yearlist = []
+    # yearlist.append(year)
+
+
+    # print('\nList of available naip files for this location:\n')
+    # for file in naip_files:
+    #     print(file)
         
-        # only use the NAIP in certain years
-        year = file.split('/')[2]
-        basename = file.split('/')[-1]
+    #     # only use the NAIP in certain years
+    #     year = file.split('/')[2]
+    #     basename = file.split('/')[-1]
         
-        nc_outfilename = os.path.join(nc_naips, basename)
-        cir_outfilename = os.path.join(cir_naips, basename)
+    #     nc_outfilename = os.path.join(nc_naips, basename)
+    #     cir_outfilename = os.path.join(cir_naips, basename)
         
-        print('The year is:', year)
-        if year not in yearlist: 
-            print('Note in the year------------')
-            continue
+    #     print('The year is:', year)
+    #     if year not in yearlist: continue
         
-        image_filename = download_url(blob_root + '/' + file, nc_outfilename,
-                                      progress_updater=DownloadProgressBar())
+    #     image_filename = download_url(blob_root + '/' + file, nc_outfilename,
+    #                                   progress_updater=DownloadProgressBar())
         
-        # read the naip images in rasterio and only keep the nir-green-red bands
-        raster = rasterio.open(nc_outfilename)
-        #r = raster.read(1, out_shape=(1, h, w))
-        r = raster.read(1)
-        g = raster.read(2)
-        #b = raster.read(3)
-        ir = raster.read(4)
-        #rgb = np.dstack((r,g,b))
-        cir = np.stack((ir,r,g))
+    #     # read the naip images in rasterio and only keep the nir-green-red bands
+    #     raster = rasterio.open(nc_outfilename)
+    #     #r = raster.read(1, out_shape=(1, h, w))
+    #     r = raster.read(1)
+    #     g = raster.read(2)
+    #     #b = raster.read(3)
+    #     ir = raster.read(4)
+    #     #rgb = np.dstack((r,g,b))
+    #     cir = np.stack((ir,r,g))
         
-        out_meta = raster.meta.copy()
-        out_meta.update({'count': 3})
+    #     out_meta = raster.meta.copy()
+    #     out_meta.update({'count': 3})
         
-        with rasterio.open(cir_outfilename, "w", **out_meta) as dest:
-            dest.write(cir)
+    #     with rasterio.open(cir_outfilename, "w", **out_meta) as dest:
+    #         dest.write(cir)
         
+        
+
+
     # # Plot the latest NAIP tile from this location
     # display_naip_tile(outfilename)
+
 
     ## calling example
     # python naip-downloader.py \
     #     --root='/home/tul69181/research/thermal-env/data/philadelphia/spatial-data' \
     #     --epsg=2272 \
     #     --year=2019
+
+# python naip-downloader.py \
+#     --root='/home/tul69181/research/thermal-env/data/philadelphia/spatial-data' \
+#     --epsg=2272 \
+#     --year=2019
